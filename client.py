@@ -19,7 +19,8 @@ def handleReply(reply):
     parts = reply.split('-');
     d = dict()
     d['temp'] = parts[0]
-    d['status'] = parts[1]
+    d['desiredTemp'] = parts[1]
+    d['status'] = parts[2]
     return d
 
 
@@ -28,26 +29,23 @@ def index(req):
     PORT = 7777               # The same port as used by the server
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
-    data = s.recv(1024)
-    tempString = repr(data).replace('\'', '')
-    tempDecimal = Decimal(tempString)
-    command = ''
+    #data = s.recv(1024)
+    #tempString = repr(data).replace('\'', '')
+    #tempDecimal = Decimal(tempString)
+    #command = ''
     
     desiredTemp = util.FieldStorage(req, keep_blank_values=1).getfirst("temp")
     
     if (desiredTemp):
         desiredTemp = Decimal(desiredTemp)
-        if (tempDecimal < desiredTemp):
-            s.sendall("ON")
-        elif (tempDecimal > desiredTemp):
-            s.sendall("OFF")
+        s.sendall("newHeatControl" + "-" + str(desiredTemp))
     else:
-        s.sendall("do nothing")
+        s.sendall("queryTemp")
         
     reply = repr(s.recv(1024)).replace('\'', '')
     replyMap = handleReply(reply)
     s.close()
-    return "Temperature is " + replyMap['temp'] + "C. Status is:" + replyMap['status']
+    return "Temperature is " + replyMap['temp'] + "C.<br/>" + "Desired is <br/>" + replyMap['desiredTemp'] + "C. Status is:" + replyMap['status'] + "<br/>."
     
     
     
